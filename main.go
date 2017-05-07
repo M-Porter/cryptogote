@@ -7,18 +7,33 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/configor"
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/unrolled/render"
 	"github.com/urfave/negroni"
+
+	_ "github.com/jinzhu/gorm/dialects/mssql"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 var addr = "127.0.0.1:3000"
 
+// Config - loaded from config.yml
+var Config = struct {
+	Database struct {
+		Driver     string `default:"sqlite3"`
+		Connection string `default:"tmp/dev.db"`
+	}
+}{}
+
 func main() {
 	l := log.New(os.Stdout, "[cryptogote] ", 0)
 
-	db, err := gorm.Open("sqlite3", "tmp/dev.db")
+	configor.Load(&Config, "config.yml")
+
+	db, err := gorm.Open(Config.Database.Driver, Config.Database.Connection)
 	if err != nil {
 		l.Fatal("Failed connecting to database!")
 	}

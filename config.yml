@@ -1,0 +1,3 @@
+# database:
+#   driver: postgres
+#   connection: "host=myhost user=gorm dbname=gorm sslmode=disable password=mypassword"
