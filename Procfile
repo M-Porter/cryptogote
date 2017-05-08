@@ -1,1 +1,1 @@
-web: ./cryptogote
+web: APP_ENV=production ./cryptogote

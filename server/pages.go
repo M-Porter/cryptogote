@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"crypto/rand"
@@ -8,35 +8,38 @@ import (
 
 	"bytes"
 
-	b64 "encoding/base64"
+	base64 "encoding/base64"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
-	"github.com/unrolled/render"
 )
 
 // Pages struct ...
 type Pages struct {
-	Render *render.Render
-	DB     *gorm.DB
+	App *App
 }
 
 var noteLink = "noteLink"
 
+// NewPages ...
+func NewPages() *Pages {
+	return &Pages{}
+}
+
 // NewMessageHandler ...
-func (pages Pages) NewMessageHandler(w http.ResponseWriter, r *http.Request) {
-	pages.Render.HTML(w, http.StatusOK, "messages_new", map[string]interface{}{
+func (pages *Pages) NewMessageHandler(w http.ResponseWriter, r *http.Request) {
+	pages.App.Render.HTML(w, http.StatusOK, "messages_new", map[string]interface{}{
 		csrf.TemplateTag: csrf.TemplateField(r),
 	})
 }
 
-var encoding = b64.URLEncoding.WithPadding(-1)
+var encoding = base64.URLEncoding.WithPadding(-1)
 
 // PostCryptoMessageHandler ...
-func (pages Pages) PostCryptoMessageHandler(w http.ResponseWriter, r *http.Request) {
+func (pages *Pages) PostCryptoMessageHandler(w http.ResponseWriter, r *http.Request) {
 	noteContent := []byte(r.FormValue("Note.Content"))
 
 	key := make([]byte, 32)
@@ -50,7 +53,7 @@ func (pages Pages) PostCryptoMessageHandler(w http.ResponseWriter, r *http.Reque
 		log.Fatal(err)
 	}
 
-	pages.DB.Create(&Notes{
+	pages.App.DB.Create(&Notes{
 		Content:       encoding.EncodeToString(cipherText),
 		EncryptionKey: encoding.EncodeToString(key),
 	})
@@ -70,19 +73,19 @@ func (pages Pages) PostCryptoMessageHandler(w http.ResponseWriter, r *http.Reque
 	buffer.WriteString("/messages/")
 	buffer.WriteString(encoding.EncodeToString(key))
 
-	pages.Render.HTML(w, http.StatusOK, "messages_new", map[string]interface{}{
+	pages.App.Render.HTML(w, http.StatusOK, "messages_new", map[string]interface{}{
 		csrf.TemplateTag: csrf.TemplateField(r),
 		noteLink:         buffer.String(),
 	})
 }
 
 // ShowMessageHandler ...
-func (pages Pages) ShowMessageHandler(w http.ResponseWriter, r *http.Request) {
+func (pages *Pages) ShowMessageHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	keyStr := vars["key"]
 
 	var note Notes
-	if pages.DB.First(&note, "encryption_key = ? ", keyStr).RecordNotFound() {
+	if pages.App.DB.First(&note, "encryption_key = ? ", keyStr).RecordNotFound() {
 		// No record in DB
 		http.Redirect(w, r, "/", 302)
 	}
@@ -112,18 +115,18 @@ func (pages Pages) ShowMessageHandler(w http.ResponseWriter, r *http.Request) {
 	html := bluemonday.UGCPolicy().SanitizeBytes(unsafe)
 
 	// Update note with filler values
-	pages.DB.Model(&note).Update("content", "garbage")
-	pages.DB.Model(&note).Update("encryption_key", gorm.Expr("NULL"))
+	pages.App.DB.Model(&note).Update("content", "garbage")
+	pages.App.DB.Model(&note).Update("encryption_key", gorm.Expr("NULL"))
 
 	// Delete note
-	pages.DB.Delete(&note)
+	pages.App.DB.Delete(&note)
 
-	pages.Render.HTML(w, http.StatusOK, "messages_show", map[string]interface{}{
+	pages.App.Render.HTML(w, http.StatusOK, "messages_show", map[string]interface{}{
 		"content": template.HTML(string(html[:])),
 	})
 }
 
 // StatisticsHandler ...
-func (pages Pages) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
-	pages.Render.HTML(w, http.StatusOK, "statistics_index", nil)
+func (pages *Pages) StatisticsHandler(w http.ResponseWriter, r *http.Request) {
+	pages.App.Render.HTML(w, http.StatusOK, "statistics_index", nil)
 }

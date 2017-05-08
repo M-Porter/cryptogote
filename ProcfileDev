@@ -1,1 +1,1 @@
-web: fresh
+web: APP_ENV=dev fresh

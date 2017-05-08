@@ -1,3 +1,9 @@
+# Example config
+#
 # database:
 #   driver: postgres
 #   connection: "host=myhost user=gorm dbname=gorm sslmode=disable password=mypassword"
+# app:
+#   addr: 127.0.0.1
+#   port: 3000
+#   secret: 7f4711e775a65a807d50a92997e5f479 # byte key
