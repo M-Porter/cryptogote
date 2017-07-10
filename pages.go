@@ -102,7 +102,7 @@ func (pages Pages) ShowMessageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	decrypted, err := Decrypt(key, cipherText)
-	// Decription failed. Usually means key is invalid.
+	// Decryption failed. Usually means key is invalid.
 	if err != nil {
 		http.Redirect(w, r, "/", 302)
 		return
