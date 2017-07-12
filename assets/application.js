@@ -4,16 +4,16 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     var minHeight = 100;
     var noteArea = document.getElementById('note-input-area');
-    noteArea.oninput = function() {
+    if (noteArea) noteArea.addEventListener('input', function() {
         noteArea.style.height = null;
         noteArea.style.height = Math.max(noteArea.scrollHeight, minHeight) + 'px';
-    };
+    });
 
     /*
     Select text on note link click
      */
     var noteLink = document.getElementById('note-link');
-    if (noteLink) noteLink.onclick = function() { selectText(); };
+    if (noteLink) noteLink.addEventListener('click', function () { selectText(); });
     var selectText = function selectText() {
         if (document.selection) {
             var range = document.body.createTextRange();
@@ -31,9 +31,17 @@ document.addEventListener('DOMContentLoaded', function() {
     Copy on click
     */
     var copyBtn = document.getElementById('copy-btn');
-    if (copyBtn) copyBtn.onclick = function(e) {
+    if (copyBtn) copyBtn.addEventListener('click', function(e) {
         e.preventDefault();
         selectText();
         document.execCommand('copy');
-    };
+    });
+
+    /*
+    Focus note area on container click
+    */
+    var noteContainer = document.querySelector('.note-container');
+    if (noteContainer) noteContainer.addEventListener('click', function(e) {
+        if (noteArea) noteArea.focus();
+    });
 });
